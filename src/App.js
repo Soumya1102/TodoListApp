@@ -78,7 +78,7 @@ const changeMode=()=>{
 
 return(
  
-   <div className="Box">
+  
  <div className={mode === "light" ? "lightMode" : "darkMode"}>
    
     
@@ -99,7 +99,7 @@ return(
    
     <TodoInput onAdd={addTask}/>
      
-   
+   <div className="Box">
     <TodoList tasks={filteredsortedTasks}
      onToggle={toggleTask} 
      onDelete={deleteTask}
