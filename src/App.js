@@ -4,15 +4,26 @@ import TodoList from "./Components/todoList";
 import "./mode.css";
 
 const App=()=>{
-  const[tasks,setTasks]=useState(()=>
-{
-  const savedTasks=localStorage.getItem("tasks");
-  return savedTasks? JSON.parse(savedTasks):[];
-  })
-
-
+  const[tasks,setTasks]=useState([])
 
   const[filter,setFilter]=useState("all");  
+
+  useEffect(()=>{
+    async function fetchTodos(){
+      try{
+        const response=await fetch("http://localhost:1102/todos")
+        if (!response.ok){
+          throw new Error("failed to fetch todos from backend");
+        }
+        const todos=await response.json();
+        setTasks(todos);
+      } catch (error){
+        console.error('error fetching todos:',error);
+      }
+    }
+
+    fetchTodos();
+  },[]);
 
 
 
@@ -22,9 +33,7 @@ const App=()=>{
     return true;
   });
 
-useEffect(()=>{
-  localStorage.setItem("tasks",JSON.stringify(tasks))
-},[tasks]);
+
 
 
 
@@ -37,13 +46,34 @@ useEffect(()=>{
 
   );
 
-  const addTask=(title,dueDate)=>{
+  const addTask=async(title,dueDate)=>{
     const newTask={
       id:Date.now(),
       title:title,
       completed:false,
       dueDate,
     };
+
+try{
+  const response=await fetch('http://localhost:1102/todos',{
+    method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify(newTask)
+  });
+
+  if(!response.ok){
+    throw new Error('failed to save in backend')
+  }
+
+  console.log("your todo is saved in the backend");
+}catch (err){
+  console.error("BAckend Error:",err);
+}
+
+
+
+
+
     setTasks([...tasks,newTask]);
   }
 
@@ -54,16 +84,56 @@ useEffect(()=>{
   setTasks(updatedTasks);
 };
 
-const deleteTask=(id)=>{
+const deleteTask=async(id)=>{
+  
+
+try{
+  const response= await fetch(`http://localhost:1102/todos/${id}`,{
+    method:'DELETE'
+  });
+  if(!response.ok){
+    throw new Error("Failed to delete task")
+  }
+  console.log("your todo has been deleted")
   const filteredTasks=tasks.filter((tasks)=>tasks.id !==id );
   setTasks(filteredTasks);
+
+
+}catch(err){
+  console.error("Backend error:",err);
+
+}
 };
 
-const editTask=(id,newTitle)=>{
+const editTask=async(id,newTitle)=>{
+  
+  
+  try{
+  const response= await fetch(`http://localhost:1102/todos/`,{
+    method:'PUT',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({
+      id:id,
+      title:newTitle
+    }) ,
+
+  });
+  if(!response.ok){
+    throw new Error("Failed to edit task")
+  }
+  console.log("your todo has been edited")
   setTasks(tasks.map((task) =>
       task.id === id ? { ...task, title: newTitle } : task
     ));
-  };
+  
+
+
+}catch(err){
+  console.error("Backend error:",err);
+
+}
+};
+
 
 
 
